@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js"
 import { createWater, updateWater } from './water.js'
 import { makeTileTexture, makeWaterTexture } from './materials.js'
 import { box, cylinder } from './utils.js'

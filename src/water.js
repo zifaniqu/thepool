@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js"
 
 export function createWater({ width=16, length=60, texture=null, positionY=-0.12, scene=null, renderer=null }) {
   // 减少顶点数以兼顾性能
