@@ -1,22 +1,23 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
 
-export function createWater({ width=16, length=60, texture=null, positionY=-0.12 }) {
+export function createWater({ width=16, length=60, texture=null, positionY=-0.12, scene=null, renderer=null }) {
   // 减少顶点数以兼顾性能
   const segW = 72, segL = 140;
   const geo = new THREE.PlaneGeometry(width, length, segW, segL);
   const mat = new THREE.MeshPhysicalMaterial({
-    color: 0x0d5f5b,
+    color: 0x0d6b66,
     map: texture || null,
-    roughness: 0.17,
-    metalness: 0.06,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.34,
-    transmission: 0.05,
-    thickness: 0.8,
+    roughness: 0.12,
+    metalness: 0.03,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.14,
+    transmission: 0.12,
+    thickness: 0.9,
     transparent: true,
-    opacity: 0.82,
+    opacity: 0.86,
     depthWrite: false,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    envMapIntensity: 1.2
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.rotation.x = -Math.PI/2;
@@ -27,7 +28,16 @@ export function createWater({ width=16, length=60, texture=null, positionY=-0.12
   const original = new Float32Array(pos.array);
   geo.setAttribute('origPos', new THREE.BufferAttribute(original, 3));
 
-  return { mesh, geo, mat };
+  // 构造 CubeCamera（低分辨率即可）
+  let cubeCamera = null;
+  if (scene && renderer) {
+    const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+    cubeCamera = new THREE.CubeCamera(0.1, 500, cubeRenderTarget);
+    cubeCamera.position.set(mesh.position.x, mesh.position.y + 0.1, mesh.position.z);
+    scene.add(cubeCamera);
+  }
+
+  return { mesh, geo, mat, cubeCamera, renderer };
 }
 
 export function updateWater(waterObj, time, dt) {
@@ -38,12 +48,33 @@ export function updateWater(waterObj, time, dt) {
   for (let i = 0; i < pos.count; i++) {
     const ox = orig.getX(i), oy = orig.getY(i);
     // 使用 x/y 作为平面坐标
-    const h = Math.sin(ox * 0.82 + time * 1.25) * 0.06
-            + Math.cos(oy * 0.54 - time * 0.9) * 0.04
-            + Math.sin((ox + oy) * 0.28 + time * 0.7) * 0.025;
+    const h = Math.sin(ox * 0.82 + time * 1.15) * 0.055
+            + Math.cos(oy * 0.54 - time * 0.9) * 0.035
+            + Math.sin((ox + oy) * 0.28 + time * 0.6) * 0.02;
     pos.setZ(i, h);
   }
   pos.needsUpdate = true;
-  // 为性能考虑：不是每帧都计算法线，这里我们每帧更新（分辨率较小）
   geo.computeVertexNormals();
+
+  // 每 N 帧更新 envMap（避免每帧太慢）
+  waterObj._frameCounter = (waterObj._frameCounter || 0) + 1;
+  const UPDATE_EVERY = 30;
+  if (waterObj._frameCounter >= UPDATE_EVERY && waterObj.cubeCamera && waterObj.renderer) {
+    waterObj._frameCounter = 0;
+    const mesh = waterObj.mesh;
+    const cubeCam = waterObj.cubeCamera;
+    const renderer = waterObj.renderer;
+    // 隐藏水体再采样以避免自反射
+    mesh.visible = false;
+    cubeCam.update(renderer, mesh.parent || mesh.parent || null);
+    mesh.visible = true;
+    // 将结果赋给水材质 envMap
+    try {
+      waterObj.mat.envMap = cubeCam.renderTarget.texture;
+      waterObj.mat.needsUpdate = true;
+    } catch (e) {
+      // 如果出错，静默处理
+      // console.warn('envMap update failed', e);
+    }
+  }
 }
