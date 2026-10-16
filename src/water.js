@@ -5,19 +5,19 @@ export function createWater({ width=16, length=60, texture=null, positionY=-0.12
   const segW = 72, segL = 140;
   const geo = new THREE.PlaneGeometry(width, length, segW, segL);
   const mat = new THREE.MeshPhysicalMaterial({
-    color: 0x0d6b66,
+    color: 0x0589a0,
     map: texture || null,
-    roughness: 0.12,
+    roughness: 0.06,
     metalness: 0.03,
-    clearcoat: 0.9,
-    clearcoatRoughness: 0.14,
-    transmission: 0.12,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.12,
+    transmission: 0.20,
     thickness: 0.9,
     transparent: true,
-    opacity: 0.86,
+    opacity: 0.88,
     depthWrite: false,
     side: THREE.DoubleSide,
-    envMapIntensity: 1.2
+    envMapIntensity: 1.6
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.rotation.x = -Math.PI/2;
@@ -58,7 +58,7 @@ export function updateWater(waterObj, time, dt) {
 
   // 每 N 帧更新 envMap（避免每帧太慢）
   waterObj._frameCounter = (waterObj._frameCounter || 0) + 1;
-  const UPDATE_EVERY = 30;
+  const UPDATE_EVERY = 6;
   if (waterObj._frameCounter >= UPDATE_EVERY && waterObj.cubeCamera && waterObj.renderer) {
     waterObj._frameCounter = 0;
     const mesh = waterObj.mesh;

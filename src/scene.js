@@ -17,7 +17,8 @@ export function initScene(scene, renderer, camera) {
   for (let z = -28; z <= 28; z += 9) ceilingPositions.push(z)
 
   ceilingPositions.forEach((z) => {
-    const spot = new THREE.SpotLight(ceilingLightColor, 1.2, 30, Math.PI * 0.22, 0.6, 1.5)
+    // make the spotlights stronger and a bit narrower for visible shafts
+    const spot = new THREE.SpotLight(ceilingLightColor, 2.4, 30, Math.PI * 0.18, 0.6, 1.5)
     spot.position.set(0, 6.5, z)
     spot.target.position.set(0, -1.2, z)
     spot.penumbra = 0.7
@@ -26,7 +27,7 @@ export function initScene(scene, renderer, camera) {
 
     const lamp = new THREE.Mesh(
       new THREE.BoxGeometry(4.8, 0.12, 0.3),
-      new THREE.MeshStandardMaterial({ color: 0xdffdf9, emissive: 0x8ee8e0, emissiveIntensity: 1.6, roughness: 0.25 })
+      new THREE.MeshStandardMaterial({ color: 0xdffdf9, emissive: 0x8ee8e0, emissiveIntensity: 3.0, roughness: 0.25 })
     )
     lamp.position.set(0, 6.62, z)
     scene.add(lamp)
